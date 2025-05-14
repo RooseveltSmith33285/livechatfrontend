@@ -69,7 +69,7 @@ const [selectAll, setSelectAll] = useState(false);
     
 
     const csvRows = selectedUsersData.map(user => 
-      `${user?.FirstName},${user?.LastName},${user?.Email},${user?.Address},${user?.State},${user?.Phone},"${user?.URL}",${user?.LeadSource},${user?.LeadQuality},${user?.Address}`
+      `${user?.FirstName},${user?.LastName},${user?.Email},${user?.Address},${user?.State},${user?.Phone},"${user?.URL}",${user?.LeadSource},${user?.LeadQuality}`
     );
   
     const csvContent = [
