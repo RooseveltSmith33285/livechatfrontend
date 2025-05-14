@@ -7,6 +7,8 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [usersPerPage] = useState(1);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+const [selectAll, setSelectAll] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [totalCount,setTotalCount]=useState()
   const [endDate, setEndDate] = useState('');
@@ -32,6 +34,64 @@ function App() {
     setCurrentPage(1);
   };
 
+
+  const handleSelectUser = (userId) => {
+    setSelectedUsers(prev => {
+      if (prev.includes(userId)) {
+        return prev.filter(id => id !== userId);
+      }
+      return [...prev, userId];
+    });
+  };
+
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedUsers([]);
+    } else {
+      const allUserIds = users.map(user => user._id);
+      setSelectedUsers(allUserIds);
+    }
+    setSelectAll(!selectAll);
+  };
+
+
+  const handleExportCSV = () => {
+    if (selectedUsers.length === 0) {
+      alert('Please select at least one user to export.');
+      return;
+    }
+  
+    const selectedUsersData = users.filter(user => selectedUsers.includes(user._id));
+    
+ 
+    const csvHeaders = ['First Name,Last Name,Email,Address,State,Phone,URL,Lead Source,Lead Quality'];
+    
+
+    const csvRows = selectedUsersData.map(user => 
+      `${user?.FirstName},${user?.LastName},${user?.Email},${user?.Address},${user?.State},${user?.Phone},"${user?.URL}",${user?.LeadSource},${user?.LeadQuality},${user?.Address}`
+    );
+  
+    const csvContent = [
+      csvHeaders.join(','),
+      ...csvRows
+    ].join('\n');
+  
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `leads_${new Date().toISOString()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
+
+
   
   const handleExportLead = (user) => {
     const doc = new jsPDF();
@@ -47,6 +107,8 @@ function App() {
       { label: 'First Name:', value: user.FirstName },
       { label: 'Last Name:', value: user.LastName },
       { label: 'Email:', value: user.Email },
+      {label:'Address',value:user.Address},
+      {label:'State',value:user.State},
       { label: 'Phone:', value: user.Phone },
       { label: 'URL:', value: user.URL },
       { label: 'Lead Source:', value: user.LeadSource },
@@ -138,6 +200,14 @@ setTotalCount(response.data.count)
             <button onClick={clearFilters} className="clear-button">
               Clear Filters
             </button>
+
+            <button 
+      onClick={handleExportCSV}
+      disabled={selectedUsers.length === 0}
+      className="export-button"
+    >
+      Export Selected as CSV
+    </button>
           </div>
           <div className="results-count">
             Showing {users?.length} results
@@ -165,6 +235,14 @@ setTotalCount(response.data.count)
                 <th>Lead Source</th>
                 <th>Lead Quality</th>
                 <th>Export Lead</th>
+                <th>
+        <input
+          type="checkbox"
+          checked={selectAll}
+          onChange={handleSelectAll}
+          disabled={users.length === 0}
+        />
+      </th>
               </tr>
             </thead>
             <tbody>
@@ -194,6 +272,13 @@ setTotalCount(response.data.count)
                       Export Lead
                     </button>
                   </td>
+                  <td>
+          <input
+            type="checkbox"
+            checked={selectedUsers.includes(user._id)}
+            onChange={() => handleSelectUser(user._id)}
+          />
+        </td>
                 </tr>
               ))}
             </tbody>
