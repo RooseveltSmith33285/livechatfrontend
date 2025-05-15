@@ -101,7 +101,7 @@ const handleFileUpload = async (event) => {
   formData.append('csvFile', file);
 
   try {
-    const response = await axios.post('https://dataenrichment.vercel.app/upload-csv', formData, {
+    const response = await axios.post('http://localhost:5000/upload-csv', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
