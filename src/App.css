@@ -217,3 +217,24 @@ a:hover {
 .business-table td:last-child {
   width: 120px;
 }
+
+
+
+.export-button {
+  margin-left: 10px;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.export-button:hover {
+  background-color: #45a049;
+}
+
+.export-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

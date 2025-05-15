@@ -92,6 +92,37 @@ const [selectAll, setSelectAll] = useState(false);
 
 
 
+const handleFileUpload = async (event) => {
+ setLoading(true)
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('csvFile', file);
+
+  try {
+    const response = await axios.post('https://dataenrichment.vercel.app/upload-csv', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    if (response.data.success) {
+      alert('CSV file uploaded successfully!');
+     
+      fetchCount();
+      fetchLeads();
+    }
+  } catch (error) {
+    setLoading(false)
+    console.error('Error uploading CSV:', error);
+    alert('Error uploading CSV file');
+    
+  } finally {
+  setLoading(false)
+    event.target.value = '';
+  }
+};
   
   const handleExportLead = (user) => {
     const doc = new jsPDF();
@@ -208,6 +239,20 @@ setTotalCount(response.data.count)
     >
       Export Selected as CSV
     </button>
+
+<button 
+  onClick={() => document.getElementById('csvInput').click()}
+  className="export-button"
+>
+  Read CSV File
+</button>
+<input
+  type="file"
+  id="csvInput"
+  accept=".csv"
+  style={{ display: 'none' }}
+  onChange={handleFileUpload}
+/>
           </div>
           <div className="results-count">
             Showing {users?.length} results
