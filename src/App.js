@@ -65,11 +65,11 @@ const [selectAll, setSelectAll] = useState(false);
     const selectedUsersData = users.filter(user => selectedUsers.includes(user._id));
     
  
-    const csvHeaders = ['First Name,Last Name,Email,Address,State,Phone,URL,Lead Source,Lead Quality'];
+    const csvHeaders = ['First Name,Last Name,Email,Address,State,Phone,URL,Lead Source,Lead Quality','Credit Score:'];
     
 
     const csvRows = selectedUsersData.map(user => 
-      `${user?.FirstName},${user?.LastName},${user?.Email},${user?.Address},${user?.State},${user?.Phone},"${user?.URL}",${user?.LeadSource},${user?.LeadQuality}`
+      `${user?.FirstName},${user?.LastName},${user?.Email},${user?.Address},${user?.State},${user?.Phone},"${user?.URL}",${user?.LeadSource},${user?.LeadQuality},${user?.Credit_score}`
     );
   
     const csvContent = [
@@ -144,6 +144,7 @@ const handleFileUpload = async (event) => {
       { label: 'URL:', value: user.URL },
       { label: 'Lead Source:', value: user.LeadSource },
       { label: 'Lead Quality:', value: user.LeadQuality },
+      { label: 'Credit Score:', value: user.Credit_score },
     ];
 
     details.forEach(({ label, value }) => {
