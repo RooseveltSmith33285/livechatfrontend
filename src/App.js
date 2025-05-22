@@ -124,42 +124,61 @@ const handleFileUpload = async (event) => {
   }
 };
   
-  const handleExportLead = (user) => {
-    const doc = new jsPDF();
-    
-    doc.setFontSize(18);
-    doc.text('Lead Details', 15, 40);
-    doc.setFontSize(12);
-    
-    const lineHeight = 8;
-    let yPosition = 50;
-    
-    const details = [
-      { label: 'First Name:', value: user.FirstName },
-      { label: 'Last Name:', value: user.LastName },
-      { label: 'Email:', value: user.Email },
-      {label:'Address',value:user.Address},
-      {label:'State',value:user.State},
-      { label: 'Phone:', value: user.Phone },
-      { label: 'URL:', value: user.URL },
-      { label: 'Lead Source:', value: user.LeadSource },
-      { label: 'Lead Quality:', value: user.LeadQuality },
-      { label: 'Credit Score:', value: user.Credit_score },
-    ];
+const handleExportLead = (user) => {
+  const doc = new jsPDF();
+  
+  doc.setFontSize(18);
+  doc.text('Lead Details', 15, 40);
+  doc.setFontSize(12);
+  
+  const lineHeight = 8;
+  let yPosition = 50;
+  
+  const details = [
+    { label: 'First Name:', value: user.FirstName },
+    { label: 'Last Name:', value: user.LastName },
+    { label: 'Email:', value: user.Email },
+    { label: 'Address:', value: user.Address },
+    { label: 'State:', value: user.State },
+    { label: 'Phone:', value: user.Phone },
+    { label: 'URL:', value: user.URL },         
+    { label: 'Lead Source:', value: user.LeadSource },
+    { label: 'Lead Quality:', value: user.LeadQuality },
+    { label: 'Credit Score:', value: user.Credit_score },
+  ];
 
-    details.forEach(({ label, value }) => {
-      doc.setFont(undefined, 'bold');
-      doc.text(label, 15, yPosition);
-      doc.setFont(undefined, 'normal');
+  details.forEach(({ label, value }) => {
+    doc.setFont(undefined, 'bold');
+    doc.text(label, 15, yPosition);
+    doc.setFont(undefined, 'normal');
+
+    
+    if (label === 'URL:') {
+      const maxWidth = 140; 
+      const urlLines = doc.splitTextToSize(value, maxWidth);
+      
+      
+      urlLines.forEach((line, index) => {
+        doc.text(line, 60, yPosition + (index * lineHeight));
+      });
+      
+     
+      yPosition += (urlLines.length * lineHeight) + 4;
+    } else {
+    
       doc.text(value, 60, yPosition);
       yPosition += lineHeight + 4;
-    });
+    }
+  });
 
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, doc.internal.pageSize.height - 10);
-    doc.save(`lead-${user.FirstName}-${user.LastName}.pdf`);
-  };
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, doc.internal.pageSize.height - 10);
+  
+
+  doc.save(`lead-${user.FirstName}-${user.LastName}.pdf`);
+};
 
   useEffect(() => {
     fetchLeads();
