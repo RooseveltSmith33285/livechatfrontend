@@ -107,12 +107,12 @@ const handleFileUpload = async (event) => {
       }
     });
     
-    if (response.data.success) {
+
       alert('CSV file uploaded successfully!');
      
       fetchCount();
       fetchLeads();
-    }
+
   } catch (error) {
     setLoading(false)
     console.error('Error uploading CSV:', error);
