@@ -163,7 +163,12 @@ function App() {
     } catch (error) {
       setLoading(false);
       console.error('Error uploading CSV:', error);
-      alert('Error uploading CSV file');
+      if(error?.response?.data?.error){
+
+        alert(error?.response?.data?.error);
+      }else{
+        alert("Something went wrong")
+      }
     } finally {
       setLoading(false);
       event.target.value = '';
