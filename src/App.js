@@ -85,6 +85,10 @@ function App() {
       csvHeaders.push('URL')
     }
 
+    if(selectedUsersData?.Type){
+      csvHeaders.push('Type')
+    }
+
     const csvRows = selectedUsersData.map(user => {
       const baseFields = [
         user?.FirstName ?? '',
@@ -103,6 +107,7 @@ function App() {
       if ('exit_url' in user) optionalFields.push(`"${(user?.exit_url ?? '').replace(/"/g, '""')}"`);
       if ('entry_url' in user) optionalFields.push(`"${(user?.entry_url ?? '').replace(/"/g, '""')}"`);
       if ('URL' in user) optionalFields.push(`"${(user?.URL ?? '').replace(/"/g, '""')}"`);
+      if ('Type' in user) optionalFields.push(`"${(user?.Type ?? '').replace(/"/g, '""')}"`);
       return [...baseFields, ...optionalFields].join(',');
     });
     const csvContent = [
@@ -233,6 +238,12 @@ function App() {
       details.push(entry_data)
     }
 
+    
+    if(user?.Type){
+      let entry_data= { label: 'Type:', value: user.Type}
+      details.push(entry_data)
+    }
+  
     details.forEach(({ label, value }) => {
       doc.setFont(undefined, 'bold');
       doc.text(label, 15, yPosition);
@@ -460,6 +471,7 @@ function App() {
                     <td>{user.LastName}</td>
                     <td>{user.Email}</td>
                     <td>{user.Phone}</td>
+                    <td>{user?.Type}</td>
                     <td>
                       {user?.URL && (
                         <a href={user.URL} target="_blank" rel="noopener noreferrer">
