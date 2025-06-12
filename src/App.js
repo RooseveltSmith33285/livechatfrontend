@@ -71,24 +71,30 @@ function App() {
     }
   
     const selectedUsersData = users.filter(user => selectedUsers.includes(user._id));
-    
-    const csvHeaders = ['First Name,Last Name,Email,Address,State,Phone,Lead Source,Lead Quality','Credit Score:'];
-    
-    if(selectedUsersData?.exit_url){
-      csvHeaders.push('Exit_url')
-    }
-    if(selectedUsersData?.entry_url){
-      csvHeaders.push('Entry_url')
-    }
-
-    if(selectedUsersData?.URL){
-      csvHeaders.push('URL')
-    }
-
-    if(selectedUsersData?.Type){
-      csvHeaders.push('Type')
-    }
-
+  
+    // Base headers as separate strings
+    const baseHeaders = [
+      'First Name',
+      'Last Name',
+      'Email',
+      'Address',
+      'State',
+      'Lead Source',
+      'Lead Quality',
+      'Credit Score'
+    ];
+  
+    // Determine which optional headers to include
+    const optionalHeaders = [];
+    if (selectedUsersData.some(user => 'exit_url' in user)) optionalHeaders.push('Exit_url');
+    if (selectedUsersData.some(user => 'entry_url' in user)) optionalHeaders.push('Entry_url');
+    if (selectedUsersData.some(user => 'URL' in user)) optionalHeaders.push('URL');
+    if (selectedUsersData.some(user => 'Title' in user)) optionalHeaders.push('Title');
+    if (selectedUsersData.some(user => 'income' in user)) optionalHeaders.push('income');
+    if (selectedUsersData.some(user => 'Phone' in user)) optionalHeaders.push('Phone');
+    // Combine all headers
+    const headers = [...baseHeaders, ...optionalHeaders];
+  
     const csvRows = selectedUsersData.map(user => {
       const baseFields = [
         user?.FirstName ?? '',
@@ -96,23 +102,25 @@ function App() {
         user?.Email ?? '',
         user?.Address ?? '',
         user?.State ?? '',
-        user?.Phone ?? '',
-        `"${(user?.URL ?? '').replace(/"/g, '""')}"`, 
-        user?.LeadSource ?? '',
-        user?.LeadQuality ?? '',
+       "Enrichify",
+        "WARM",
         user?.Credit_score ?? ''
       ];
-    
+  
       const optionalFields = [];
-      if ('exit_url' in user) optionalFields.push(`"${(user?.exit_url ?? '').replace(/"/g, '""')}"`);
-      if ('entry_url' in user) optionalFields.push(`"${(user?.entry_url ?? '').replace(/"/g, '""')}"`);
-      if ('URL' in user) optionalFields.push(`"${(user?.URL ?? '').replace(/"/g, '""')}"`);
-      if ('Type' in user) optionalFields.push(`"${(user?.Type ?? '').replace(/"/g, '""')}"`);
-      return [...baseFields, ...optionalFields].join(',');
+      if (optionalHeaders.includes('Exit_url')) optionalFields.push(`"${(user?.exit_url ?? '').replace(/"/g, '""')}"`);
+      if (optionalHeaders.includes('Entry_url')) optionalFields.push(`"${(user?.entry_url ?? '').replace(/"/g, '""')}"`);
+      if (optionalHeaders.includes('URL')) optionalFields.push(`"${(user?.URL ?? '').replace(/"/g, '""')}"`);
+      if (optionalHeaders.includes('Title')) optionalFields.push(`"${(user?.Title ?? '').replace(/"/g, '""')}"`);
+      if (optionalHeaders.includes('income')) optionalFields.push(`"${(user?.income ?? '').replace(/"/g, '""')}"`);
+      if (optionalHeaders.includes('Phone')) optionalFields.push(`"${(user?.Phone ?? '').replace(/"/g, '""')}"`);
+      
+      return [...baseFields, ...optionalFields];
     });
+  
     const csvContent = [
-      csvHeaders.join(','),
-      ...csvRows
+      headers.join(','),  // Header row
+      ...csvRows.map(row => row.join(','))  // Data rows
     ].join('\n');
   
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -120,7 +128,7 @@ function App() {
     const url = URL.createObjectURL(blob);
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `leads_${new Date().toISOString()}.csv`);
+    link.setAttribute('download', `leads_${new Date().toISOString().slice(0,10)}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -216,8 +224,7 @@ function App() {
       { label: 'Last Name:', value: user.LastName },
       { label: 'Email:', value: user.Email },
       { label: 'Address:', value: user.Address },
-      { label: 'State:', value: user.State },
-      { label: 'Phone:', value: user.Phone },        
+      { label: 'State:', value: user.State },      
       { label: 'Lead Source:', value: user.LeadSource },
       { label: 'Lead Quality:', value: user.LeadQuality },
       { label: 'Credit Score:', value: user.Credit_score },
@@ -239,11 +246,22 @@ function App() {
     }
 
     
-    if(user?.Type){
-      let entry_data= { label: 'Type:', value: user.Type}
+    if(user?.Title){
+      let entry_data= { label: 'Title:', value: user.Title}
       details.push(entry_data)
     }
   
+
+    if(user?.income){
+      let entry_data= { label: 'Income:', value: user.income}
+      details.push(entry_data)
+    }
+
+    if(user?.Phone){
+      let entry_data= { label: 'Phone:', value: user.Phone}
+      details.push(entry_data)
+    }
+
     details.forEach(({ label, value }) => {
       doc.setFont(undefined, 'bold');
       doc.text(label, 15, yPosition);
@@ -455,11 +473,12 @@ function App() {
                   <th>Last Name</th>
                   <th>Email</th>
                   <th>Phone Number</th>
-                  <th>Type</th>
+                  <th>Title</th>
                   <th>URLs</th>
                   <th>Lead Source</th>
                   <th>Lead Quality</th>
                   <th>Export Lead</th>
+                  
                   <th>
                     <input
                       type="checkbox"
@@ -467,6 +486,9 @@ function App() {
                       onChange={handleSelectAll}
                       disabled={users.length === 0}
                     />
+                  </th>
+                  <th>
+                    Income
                   </th>
                 </tr>
               </thead>
@@ -477,7 +499,7 @@ function App() {
                     <td>{user.LastName}</td>
                     <td>{user.Email}</td>
                     <td>{user?.Phone ? user?.Phone : 'N/A'}</td>
-                    <td>{user?.Type?user?.Type:'Live'}</td>
+                    <td>{user?.Title?user?.Title:'Live'}</td>
                     <td>
                       {user?.URL && (
                         <div>
@@ -521,6 +543,9 @@ function App() {
                         checked={selectedUsers.includes(user._id)}
                         onChange={() => handleSelectUser(user._id)}
                       />
+                    </td>
+                    <td>
+                      {user?.income?user?.income:'N/A'}
                     </td>
                   </tr>
                 ))}
