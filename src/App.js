@@ -6,7 +6,7 @@ import axios from 'axios';
 function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [usersPerPage] = useState(1);
+  const [usersPerPage] = useState(10);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [results, setResults] = useState([]);
@@ -292,9 +292,14 @@ function App() {
     try {
       setLoading(true)
       const startIndex = (currentPage - 1) * usersPerPage;
-      const response = await axios.get(`https://dataenrichment.vercel.app/leads`, {
-        params: { startIndex, pageSize: usersPerPage, startDate, endDate }
-      });
+    const response = await axios.get(`https://dataenrichment.vercel.app/leads`, {
+      params: { 
+        startIndex, 
+        pageSize: usersPerPage, 
+        startDate, 
+        endDate 
+      }
+    });
       
       setUsers(response.data.data);
       setTotalPages(response.data.totalPages);
@@ -443,14 +448,15 @@ function App() {
           </div>
         ) : (
           <div className="table-responsive">
-            <table className="business-table">
+             <table className="business-table">
               <thead>
                 <tr>
                   <th>First Name</th>
                   <th>Last Name</th>
                   <th>Email</th>
                   <th>Phone Number</th>
-                  <th>URL</th>
+                  <th>Type</th>
+                  <th>URLs</th>
                   <th>Lead Source</th>
                   <th>Lead Quality</th>
                   <th>Export Lead</th>
@@ -470,29 +476,35 @@ function App() {
                     <td>{user.FirstName}</td>
                     <td>{user.LastName}</td>
                     <td>{user.Email}</td>
-                    <td>{user.Phone}</td>
-                    <td>{user?.Type}</td>
+                    <td>{user?.Phone ? user?.Phone : 'N/A'}</td>
+                    <td>{user?.Type?user?.Type:'Live'}</td>
                     <td>
                       {user?.URL && (
-                        <a href={user.URL} target="_blank" rel="noopener noreferrer">
-                          View URL
-                        </a>
+                        <div>
+                          <a href={user.URL} target="_blank" rel="noopener noreferrer">
+                            View URL
+                          </a>
+                        </div>
                       )}
                       {user?.entry_url && (
-                        <a href={user?.entry_url} target="_blank" rel="noopener noreferrer">
-                          View entry_url
-                        </a>
+                        <div>
+                          <a href={user?.entry_url} target="_blank" rel="noopener noreferrer">
+                            Entry URL
+                          </a>
+                        </div>
                       )}
                       {user.exit_url && (
-                        <a href={user.URL ? user.URL : user?.exit_url ? user?.exit_url : ''} target="_blank" rel="noopener noreferrer">
-                          View exit_url
-                        </a>
+                        <div>
+                          <a href={user?.exit_url} target="_blank" rel="noopener noreferrer">
+                            Exit URL
+                          </a>
+                        </div>
                       )}
                     </td>
-                    <td>{user.LeadSource}</td>
+                    <td>{user.LeadSource ? user.LeadSource : 'ENRICHIFY'}</td>
                     <td>
-                      <span className={`quality-badge ${user.LeadQuality.toLowerCase()}`}>
-                        {user.LeadQuality}
+                      <span className={`quality-badge ${user.LeadQuality ? user.LeadQuality.toLowerCase() : 'warm'}`}>
+                        {user.LeadQuality ? user.LeadQuality : 'WARM'}
                       </span>
                     </td>
                     <td>
