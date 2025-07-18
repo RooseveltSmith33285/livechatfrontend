@@ -231,45 +231,63 @@ function App() {
     ];
 
     if(user?.entry_url){
-      let entry_data={ label: 'Entry_url', value: user.entry_url }
+      let entry_data = { label: 'Entry URL:', value: user.entry_url, isUrl: true }
       details.push(entry_data)
     }
 
     if(user?.exit_url){
-      let entry_data={ label: 'Exit_url', value: user.exit_url }
-      details.push(entry_data)
+      let exit_data = { label: 'Exit URL:', value: user.exit_url, isUrl: true }
+      details.push(exit_data)
     }
 
     if(user?.URL){
-      let entry_data= { label: 'URL:', value: user.URL }
-      details.push(entry_data)
+      let url_data = { label: 'URL:', value: user.URL, isUrl: true }
+      details.push(url_data)
     }
 
-    
     if(user?.Title){
-      let entry_data= { label: 'Title:', value: user.Title}
-      details.push(entry_data)
+      let title_data = { label: 'Title:', value: user.Title }
+      details.push(title_data)
     }
-  
 
     if(user?.income){
-      let entry_data= { label: 'Income:', value: user.income}
-      details.push(entry_data)
+      let income_data = { label: 'Income:', value: user.income }
+      details.push(income_data)
     }
 
     if(user?.Phone){
-      let entry_data= { label: 'Phone:', value: user.Phone}
-      details.push(entry_data)
+      let phone_data = { label: 'Phone:', value: user.Phone }
+      details.push(phone_data)
     }
 
-    details.forEach(({ label, value }) => {
+    // Function to check if we need a new page
+    const checkPageBreak = (currentY, additionalHeight = 0) => {
+      const pageHeight = doc.internal.pageSize.height;
+      const bottomMargin = 20;
+      
+      if (currentY + additionalHeight > pageHeight - bottomMargin) {
+        doc.addPage();
+        return 20; // Reset to top of new page
+      }
+      return currentY;
+    };
+
+    details.forEach(({ label, value, isUrl }) => {
+      // Check if we need a new page before adding content
+      yPosition = checkPageBreak(yPosition, 20);
+      
       doc.setFont(undefined, 'bold');
       doc.text(label, 15, yPosition);
       doc.setFont(undefined, 'normal');
 
-      if (label === 'URL:') {
-        const maxWidth = 140; 
+      // Handle URL fields that need text wrapping
+      if (isUrl && value) {
+        const maxWidth = 140; // Maximum width for URL text
         const urlLines = doc.splitTextToSize(value, maxWidth);
+        
+        // Check if we need a new page for the URL content
+        const urlHeight = urlLines.length * lineHeight;
+        yPosition = checkPageBreak(yPosition, urlHeight);
         
         urlLines.forEach((line, index) => {
           doc.text(line, 60, yPosition + (index * lineHeight));
@@ -277,18 +295,37 @@ function App() {
         
         yPosition += (urlLines.length * lineHeight) + 4;
       } else {
-        doc.text(value, 60, yPosition);
-        yPosition += lineHeight + 4;
+        // Handle regular text fields
+        const textValue = value || 'N/A';
+        
+        // For very long text fields, wrap them too
+        if (textValue.length > 50) {
+          const maxWidth = 140;
+          const textLines = doc.splitTextToSize(textValue, maxWidth);
+          
+          const textHeight = textLines.length * lineHeight;
+          yPosition = checkPageBreak(yPosition, textHeight);
+          
+          textLines.forEach((line, index) => {
+            doc.text(line, 60, yPosition + (index * lineHeight));
+          });
+          
+          yPosition += (textLines.length * lineHeight) + 4;
+        } else {
+          doc.text(textValue, 60, yPosition);
+          yPosition += lineHeight + 4;
+        }
       }
     });
 
+    // Add footer to the last page
+    const pageHeight = doc.internal.pageSize.height;
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, doc.internal.pageSize.height - 10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, pageHeight - 10);
     
     doc.save(`lead-${user.FirstName}-${user.LastName}.pdf`);
-  };
-
+};
   useEffect(() => {
     fetchLeads();
   }, [currentPage, startDate, endDate]);
