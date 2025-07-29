@@ -3,6 +3,159 @@ import './App.css';
 import jsPDF from 'jspdf';
 import axios from 'axios';
 
+
+ const RenderDataZappTab = () => {
+    const [processedData, setProcessedData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const downloadCSVtwo = (data, filename = 'processed_data.csv') => {
+      const csvContent = convertToCSVTwo(data);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // Create download link
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+  
+
+    const convertToCSVTwo = (data) => {
+      if (!data || data.length === 0) return '';
+      
+      // Get all unique keys from all objects (in case some objects have different fields)
+      const allKeys = [...new Set(data.flatMap(obj => Object.keys(obj)))];
+      
+      // Create header row
+      const header = allKeys.join(',');
+      
+      // Create data rows
+      const rows = data.map(obj => {
+        return allKeys.map(key => {
+          const value = obj[key];
+          // Handle null, undefined, objects, arrays
+          if (value === null || value === undefined) {
+            return '';
+          }
+          if (typeof value === 'object') {
+            return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+          }
+          // Escape commas and quotes in strings
+          const stringValue = String(value);
+          if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+            return `"${stringValue.replace(/"/g, '""')}"`;
+          }
+          return stringValue;
+        }).join(',');
+      });
+      
+      return [header, ...rows].join('\n');
+    };
+    
+    
+    const handleDataZappUpload = async (event) => {
+      setLoading(true);
+      const file = event.target.files[0];
+      if (!file) {
+        setLoading(false);
+        return;
+      }
+    
+      const formData = new FormData();
+      formData.append('dataZappFile', file);
+    
+      try {
+        const response = await axios.post('http://localhost:5000/upload-datazapp', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        let result=response.data;
+        alert('DataZapp file uploaded successfully!');
+        if (result.data && result.data.length > 0) {
+          const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+          const filename = `processed_datazapp_${timestamp}.csv`;
+          downloadCSVtwo(result.data, filename);
+          
+          // Optional: Show success notification
+          alert(`File processed successfully! ${result.data.length} records processed. CSV download started.`);
+        }
+      } catch (error) {
+        console.error('Error uploading DataZapp file:', error);
+        alert('Error uploading DataZapp file');
+      } finally {
+        setLoading(false);
+        event.target.value = ''; // Reset the file input
+      }
+    };
+    
+    return (
+      <div className="upload-section">
+        <div className="upload-container">
+          <h2>Upload DataZapp Files</h2>
+          <p>Select and upload your DataZapp files for processing.</p>
+          
+          <div className="upload-buttons">
+            <div className="upload-option">
+              <button 
+                onClick={() => document.getElementById('dataZappInput').click()}
+                className="upload-button primary"
+                disabled={loading}
+              >
+                {loading ? 'Processing...' : 'Upload & Process DataZapp File'}
+              </button>
+              <input
+                type="file"
+                id="dataZappInput"
+                accept=".csv,.xlsx"
+                style={{ display: 'none' }}
+                onChange={handleDataZappUpload}
+              />
+            </div>
+            
+            {/* Optional: Manual download button if you want to store the data */}
+            {processedData && (
+              <div className="upload-option">
+                <button 
+                  onClick={() => downloadCSVtwo(processedData, 'processed_datazapp.csv')}
+                  className="upload-button secondary"
+                >
+                  Download Processed CSV
+                </button>
+              </div>
+            )}
+          </div>
+  
+          {loading && (
+            <div className="loading-widget">
+              <div className="spinner"></div>
+              <p>Processing your file Please wait...</p>
+              <small>This may take a few moments for large files.</small>
+            </div>
+          )}
+  
+          {/* Optional: Show processing summary */}
+          {processedData && (
+            <div className="processing-summary">
+              <h3>Processing Complete!</h3>
+              <p>✅ {processedData.length} records processed</p>
+              <p>✅ CSV file downloaded automatically</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+
+
+ 
+
 function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -11,6 +164,7 @@ function App() {
   const [selectAll, setSelectAll] = useState(false);
   const [results, setResults] = useState([]);
   const [startDate, setStartDate] = useState('');
+  const [activeTab, setActiveTab] = useState('leads'); // Add this with your other state declarations
   const [totalCount, setTotalCount] = useState();
   const [endDate, setEndDate] = useState('');
   const [hasMore, setHasMore] = useState(false);
@@ -43,6 +197,41 @@ function App() {
       return [...prev, userId];
     });
   };
+
+ 
+
+
+  
+
+  
+  
+ 
+
+
+ 
+  
+  const downloadCSV = (data, filename = 'processed_data.csv') => {
+    const csvContent =convertToCSV(data);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create download link
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  // Updated handleDataZappUpload function
+  
+
+
+  
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -144,7 +333,7 @@ function App() {
     formData.append('csvFile', file);
   
     try {
-      const response = await axios.post('https://livechatbackend-eight.vercel.app/enrichifystatcounter', formData, {
+      const response = await axios.post('http://localhost:5000/enrichifystatcounter', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -336,7 +525,7 @@ function App() {
 
   const fetchCount=async()=>{
     try{
-      let response=await axios.get(`https://livechatbackend-eight.vercel.app/totalLeads`)
+      let response=await axios.get(`http://localhost:5000/totalLeads`)
       setTotalCount(response.data.count)
     }catch(e){
 
@@ -347,7 +536,7 @@ function App() {
     try {
       setLoading(true)
       const startIndex = (currentPage - 1) * usersPerPage;
-    const response = await axios.get(`https://livechatbackend-eight.vercel.app/leads`, {
+    const response = await axios.get(`http://localhost:5000/leads`, {
       params: { 
         startIndex, 
         pageSize: usersPerPage, 
@@ -380,7 +569,7 @@ function App() {
       const formData = new FormData();
       formData.append('csvFile', file);
   
-      const response = await axios.post('https://livechatbackend-eight.vercel.app/reuploadfile', formData, {
+      const response = await axios.post('http://localhost:5000/reuploadfile', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -469,35 +658,32 @@ function App() {
           </div>
         </div>
 
-        {/* Popup Modal */}
-        {showPopup && (
-          <div className="popup-overlay" onClick={closePopup}>
-            <div className="popup-content" onClick={(e) => e.stopPropagation()}>
-              <div className="popup-header">
-                <h3>Leads Pulled Information</h3>
-                <button className="close-button" onClick={closePopup}>×</button>
-              </div>
-              <div className="popup-body">
-                <p>Total leads pulled from last CSV upload: <strong>{results.length}</strong></p>
-                {results.length > 0 && (
-                  <div className="results-preview">
-                    <p>Sample data preview:</p>
-                    <ul>
-                      {results.slice(0, 3).map((result, index) => (
-                        <li key={index}>
-                          {Object.keys(result).slice(0, 3).map(key => `${key}: ${result[key]}`).join(', ')}
-                          {Object.keys(result).length > 3 && '...'}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="business-container">
+      <h1 className="business-header">Enrichify Lead System</h1>
+      
+      {/* Tab Navigation */}
+      <div className="tab-navigation">
+        <button 
+          className={`tab-button ${activeTab === 'leads' ? 'active' : ''}`}
+          onClick={() => setActiveTab('leads')}
+        >
+          View Leads
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'datazapp' ? 'active' : ''}`}
+          onClick={() => setActiveTab('datazapp')}
+        >
+          Upload DataZapp File
+        </button>
+      </div>
 
-        {loading ? (
+      {/* Tab Content */}
+      <div className="tab-content">
+        {activeTab === 'leads' && (
+          <>
+            {/* Your existing leads content goes here */}
+            <div className="filter-section">
+            {loading ? (
           <div className="loading-widget">
             <div className="spinner"></div>
           </div>
@@ -606,7 +792,44 @@ function App() {
             Next
           </button>
         </div>
+      
+            </div>
+          </>
+        )}
+        {activeTab === 'datazapp' && <RenderDataZappTab />}
       </div>
+
+    </div>
+
+        {/* Popup Modal */}
+        {showPopup && (
+          <div className="popup-overlay" onClick={closePopup}>
+            <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+              <div className="popup-header">
+                <h3>Leads Pulled Information</h3>
+                <button className="close-button" onClick={closePopup}>×</button>
+              </div>
+              <div className="popup-body">
+                <p>Total leads pulled from last CSV upload: <strong>{results.length}</strong></p>
+                {results.length > 0 && (
+                  <div className="results-preview">
+                    <p>Sample data preview:</p>
+                    <ul>
+                      {results.slice(0, 3).map((result, index) => (
+                        <li key={index}>
+                          {Object.keys(result).slice(0, 3).map(key => `${key}: ${result[key]}`).join(', ')}
+                          {Object.keys(result).length > 3 && '...'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        </div>
     </div>
   );
 }
