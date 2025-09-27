@@ -70,7 +70,7 @@ import axios from 'axios';
       formData.append('dataZappFile', file);
     
       try {
-        const response = await axios.post('http://localhost:5000/upload-datazapp', formData, {
+        const response = await axios.post('https://livechatbackend-eight.vercel.app/upload-datazapp', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -333,7 +333,7 @@ function App() {
     formData.append('csvFile', file);
   
     try {
-      const response = await axios.post('http://localhost:5000/enrichifystatcounter', formData, {
+      const response = await axios.post('https://livechatbackend-eight.vercel.app/enrichifystatcounter', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -525,7 +525,7 @@ function App() {
 
   const fetchCount=async()=>{
     try{
-      let response=await axios.get(`http://localhost:5000/totalLeads`)
+      let response=await axios.get(`https://livechatbackend-eight.vercel.app/totalLeads`)
       setTotalCount(response.data.count)
     }catch(e){
 
@@ -536,7 +536,7 @@ function App() {
     try {
       setLoading(true)
       const startIndex = (currentPage - 1) * usersPerPage;
-    const response = await axios.get(`http://localhost:5000/leads`, {
+    const response = await axios.get(`https://livechatbackend-eight.vercel.app/leads`, {
       params: { 
         startIndex, 
         pageSize: usersPerPage, 
@@ -569,7 +569,7 @@ function App() {
       const formData = new FormData();
       formData.append('csvFile', file);
   
-      const response = await axios.post('http://localhost:5000/reuploadfile', formData, {
+      const response = await axios.post('https://livechatbackend-eight.vercel.app/reuploadfile', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
